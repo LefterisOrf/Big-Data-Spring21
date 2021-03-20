@@ -33,7 +33,7 @@ public class Trie {
 
 	private Node createNodeForEachRemainigKey(char[] keys, int i, JsonData data) {
 		Node previous = null;
-		for(int j = keys.length; j < i; j--) {
+		for(int j = keys.length - 1; j >= i; j--) {
 			Node node = new Node(keys[j]);
 			if(previous != null) {
 				node.putChild(previous.getCurrentKey(), previous);
