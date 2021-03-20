@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import com.data.JsonData;
 import com.data.Tuple;
+import com.trie.Trie;
 
 public class Main {
 	private static String filename;
@@ -19,11 +20,13 @@ public class Main {
 	private static char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
 	private static Map<String, Class<?>> datatypes= new HashMap<String, Class<?>>();
 	private static Random random = new Random(System.currentTimeMillis());
+	private static Trie trie = new Trie();
 	
 	public static void main(String args[]) throws FileNotFoundException {
 		readArguments(args);
 		readFile();
 		generateData();
+		System.out.println(trie);
 	}
 
 	private static void readArguments(String[] args) {
@@ -50,6 +53,7 @@ public class Main {
 		for (int i = 0; i < lines; i++) {
 			JsonData father = generateRandomSimpleData("key" + i);
 			insertNestedTuple(father);
+			trie.insertData(father);
 			System.out.println(father);
 		}
 	}
