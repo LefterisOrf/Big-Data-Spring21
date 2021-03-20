@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class JsonData {
 	private String key;
 	private List<Tuple> tuples;
@@ -62,6 +64,33 @@ public class JsonData {
 		}
 		string += " } ";
 		return string;
+	}
+	
+	public void fromString(String jsonData) {
+		String[] splitted = jsonData.split(":", 2);
+		String key = StringUtils.substringBetween(splitted[0], "\"");
+		String value = StringUtils.substringAfter(splitted[1], "{");
+		value = StringUtils.substringBeforeLast(value, "}");
+		System.out.println("Key is: " + key);
+		System.out.println("Value is: " + value);
+		String[] spl = StringUtils.splitByWholeSeparator(value, ";");
+		boolean nested = false;
+		for(int i = 0; i < spl.length; i++) {
+			if(spl[i].contains("{")) {
+				nested = true;
+			}
+			if(spl[i].contains("}")) {
+				//Handle the closing tag
+				nested = false;
+			}
+			
+			if(nested) {
+				
+			} else {
+				String[] childTrimmed = spl[i].split(":");
+				System.out.println("Key: " + StringUtils.substringBetween(childTrimmed[0], "\"") + ", Value: " + StringUtils.trim(childTrimmed[1]));
+			}
+		}
 	}
 	
 	public List<Tuple> getTuples() {
