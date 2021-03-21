@@ -10,6 +10,28 @@ public class Trie {
 		this.root = new Node();
 	}
 	
+	public String get(String key) {
+		char[] keyAr = key.toCharArray();
+		Node current = root;
+		for (int i = 0; i < keyAr.length; i++) {
+			char c = keyAr[i];
+			current = current.getChild(c);
+			if(current == null) {
+				return null;
+			}
+		}
+		return current.getData() != null ?  current.getData().toString() : null;
+	}
+	
+	public String query(String key) {
+		// First of all split the key on '.' 
+		
+		// The high level key is in splitted[0] so we need to get(splitted[0])
+		
+		// Then iterate through the KeyValueMap of the node to find the subsequent keys.
+		return "";
+	}
+	
 	public void insertData(JsonData data) {
 		char[] keys = data.getKey().toCharArray();
 		Node current = root;
