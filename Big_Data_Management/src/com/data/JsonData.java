@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -66,31 +67,125 @@ public class JsonData {
 		return string;
 	}
 	
-	public void fromString(String jsonData) {
+	public JsonData fromString(String jsonData) {
 		String[] splitted = jsonData.split(":", 2);
 		String key = StringUtils.substringBetween(splitted[0], "\"");
 		String value = StringUtils.substringAfter(splitted[1], "{");
 		value = StringUtils.substringBeforeLast(value, "}");
-		System.out.println("Key is: " + key);
-		System.out.println("Value is: " + value);
-		String[] spl = StringUtils.splitByWholeSeparator(value, ";");
-		boolean nested = false;
-		for(int i = 0; i < spl.length; i++) {
-			if(spl[i].contains("{")) {
-				nested = true;
+		JsonData parent = new JsonData(key);
+		Stack<JsonData> active = new Stack<JsonData>();
+		while(true) {
+			String[] splittedVal = StringUtils.split(value, ";", 2);
+			String possibleTuple = splittedVal[0];
+			// Remove possibleTuple from value
+			if(splittedVal.length > 1) {
+				value = splittedVal[1];
+			} else {
+				value = "";
 			}
-			if(spl[i].contains("}")) {
-				//Handle the closing tag
-				nested = false;
+			if(possibleTuple.contains("{") && possibleTuple.contains("}")) {
+				// New JsonData with one tuple inside it
+				JsonData json = new JsonData("");
+				json.setKey(StringUtils.substringBetween(StringUtils.substringBefore(possibleTuple, ":"), "\""));
+				String tuple = StringUtils.substringBetween(possibleTuple, "{", "}");
+				json.getTuples().add(generateTupleFromString(tuple));
+				if(!active.isEmpty()) {
+					active.peek().getKeyValue().put(json.getKey(), json);
+					popFromStackAccordingToTheNumberOfClosingTags(parent, active, StringUtils.substringBeforeLast(possibleTuple, "}"), json);
+				} else {
+					parent.getKeyValue().put(json.getKey(), json);
+				}
+			} else if(possibleTuple.contains("{")) {
+				// Contains only an opening tag -> Create new JsonData
+				active.add(new JsonData(""));
+				active.peek().setKey(StringUtils.substringBetween(StringUtils.substringBefore(possibleTuple, ":"), "\""));
+				String tuple = StringUtils.substringAfter(possibleTuple, "{");
+				active.peek().getTuples().add(generateTupleFromString(tuple));
+			} else if(possibleTuple.contains("}")) {
+				// Contains one or more closing tags
+				if(!active.isEmpty()) {
+					active.peek().getTuples().add(generateTupleFromString(possibleTuple));
+					popFromStackAccordingToTheNumberOfClosingTags(parent, active, possibleTuple, parent);
+				} else {
+					parent.getTuples().add(generateTupleFromString(possibleTuple));
+				}
+			}
+			else {
+				// Just a regular tuple
+				if(!active.isEmpty() ) {
+					active.peek().getTuples().add(generateTupleFromString(possibleTuple));
+				} else {
+					parent.getTuples().add(generateTupleFromString(possibleTuple));
+				}
 			}
 			
-			if(nested) {
-				
-			} else {
-				String[] childTrimmed = spl[i].split(":");
-				System.out.println("Key: " + StringUtils.substringBetween(childTrimmed[0], "\"") + ", Value: " + StringUtils.trim(childTrimmed[1]));
+			if(value.isEmpty()) {
+				break;
 			}
 		}
+		popEverythingFromStack(parent, active);
+		
+		
+		return parent;
+	}
+
+	private void popFromStackAccordingToTheNumberOfClosingTags(JsonData parent, Stack<JsonData> active,	String possibleTuple, JsonData json) {
+		Integer matches = StringUtils.countMatches(possibleTuple, "}") ;
+		JsonData dato = null;
+		if(!active.isEmpty()) {
+			for (int i = 0; i < matches; i++) {
+				if(dato != null) {
+					active.peek().getKeyValue().put(dato.getKey(), dato);
+				}
+				dato = active.pop();
+			}
+			if(dato != null && active.isEmpty()) {
+				parent.getKeyValue().put(dato.getKey(), dato);
+			} else if(dato != null && !active.isEmpty()) {
+				active.peek().getKeyValue().put(dato.getKey(), dato);
+			}
+		} else if(matches <= 1) {
+			parent.getKeyValue().put(json.getKey(), json);
+		} else {
+			throw new RuntimeException("Found " + matches + " matches but active is empty.");
+		}
+	}
+	
+	private void popEverythingFromStack(JsonData parent, Stack<JsonData> active) {
+		JsonData dato = null;
+		while(!active.isEmpty()) {
+			if(dato != null) {
+				active.peek().getKeyValue().put(dato.getKey(), dato);
+			}
+			dato = active.pop();
+		}
+
+		if(dato != null) {
+			parent.getKeyValue().put(dato.getKey(), dato);
+		}
+	}
+
+	private Tuple generateTupleFromString(String possibleTuple) {
+		Tuple tuple = new Tuple();
+		if(possibleTuple.contains("}")) {
+			possibleTuple = StringUtils.substringBefore(possibleTuple, "}");
+		}
+		
+		
+		String tupKey = StringUtils.substringBefore(possibleTuple, ":").trim();
+		tupKey = StringUtils.substringBetween(tupKey, "\"");
+		tuple.setKey(tupKey);
+		String tupValue = StringUtils.substringAfter(possibleTuple, ":").trim();
+		if(tupValue.contains("\"")) {
+			tuple.setValue(StringUtils.substringBetween(tupValue, "\""));
+		} else if(tupValue.contains(".")){
+			// Try to instantiate a Double
+			tuple.setValue(Double.parseDouble(tupValue));
+		} else {
+			// Integer
+			tuple.setValue(Integer.parseInt(tupValue));
+		}
+		return tuple;
 	}
 	
 	public List<Tuple> getTuples() {
