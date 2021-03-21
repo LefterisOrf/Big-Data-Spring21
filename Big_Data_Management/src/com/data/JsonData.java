@@ -8,6 +8,10 @@ import java.util.Stack;
 
 import org.apache.commons.lang3.StringUtils;
 
+/*
+ * Class that holds a key and the tuples that this key holds.
+ * In case some of the key's children are complex types, we add them on the KeyValue map as separate JsonData attributes
+ */
 public class JsonData {
 	private String key;
 	private List<Tuple> tuples;
@@ -55,11 +59,8 @@ public class JsonData {
 				value = "";
 			}
 			if(possibleTuple.contains("{") && possibleTuple.contains("}")) {
-				// New JsonData with one tuple inside it
-				JsonData json = new JsonData("");
-				json.setKey(StringUtils.substringBetween(StringUtils.substringBefore(possibleTuple, ":"), "\""));
-				String tuple = StringUtils.substringBetween(possibleTuple, "{", "}");
-				json.getTuples().add(generateTupleFromString(tuple));
+				// New JsonData with one tuple inside it and add it to the father ( either the head of the stack or the parent )
+				JsonData json = createSimpleJsonData(possibleTuple);
 				if(!active.isEmpty()) {
 					active.peek().getKeyValue().put(json.getKey(), json);
 					popFromStackAccordingToTheNumberOfClosingTags(parent, active, StringUtils.substringBeforeLast(possibleTuple, "}"), json);
@@ -67,13 +68,14 @@ public class JsonData {
 					parent.getKeyValue().put(json.getKey(), json);
 				}
 			} else if(possibleTuple.contains("{")) {
-				// Contains only an opening tag -> Create new JsonData
+				// Contains only an opening tag -> Create new JsonData and add it to the stack
 				active.add(new JsonData(""));
 				active.peek().setKey(StringUtils.substringBetween(StringUtils.substringBefore(possibleTuple, ":"), "\""));
 				String tuple = StringUtils.substringAfter(possibleTuple, "{");
 				active.peek().getTuples().add(generateTupleFromString(tuple));
 			} else if(possibleTuple.contains("}")) {
-				// Contains one or more closing tags
+				/* Contains one or more closing tags. Create a Tuple, add it to the head of the stack ( or the parent ) 
+				 * and then add the jsonData to their respective fathers */
 				if(!active.isEmpty()) {
 					active.peek().getTuples().add(generateTupleFromString(possibleTuple));
 					popFromStackAccordingToTheNumberOfClosingTags(parent, active, possibleTuple, parent);
@@ -82,7 +84,7 @@ public class JsonData {
 				}
 			}
 			else {
-				// Just a regular tuple
+				// Create a simple tuple and add it either to the head of the stack or to the parent.
 				if(!active.isEmpty() ) {
 					active.peek().getTuples().add(generateTupleFromString(possibleTuple));
 				} else {
@@ -98,6 +100,17 @@ public class JsonData {
 		
 		
 		return parent;
+	}
+
+	/*
+	 * Creates a JsonData which contains only 1 tuple and nothing more.
+	 */
+	private static JsonData createSimpleJsonData(String possibleTuple) {
+		JsonData json = new JsonData("");
+		json.setKey(StringUtils.substringBetween(StringUtils.substringBefore(possibleTuple, ":"), "\""));
+		String tuple = StringUtils.substringBetween(possibleTuple, "{", "}");
+		json.getTuples().add(generateTupleFromString(tuple));
+		return json;
 	}
 
 	private static void popFromStackAccordingToTheNumberOfClosingTags(JsonData parent, Stack<JsonData> active,	String possibleTuple, JsonData json) {
