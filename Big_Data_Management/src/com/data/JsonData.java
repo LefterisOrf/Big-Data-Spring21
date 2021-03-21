@@ -1,9 +1,7 @@
 package com.data;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -20,33 +18,6 @@ public class JsonData {
 		tuples = new ArrayList<Tuple>();
 		keyValue = new HashMap<String, JsonData>();
 	}
-	
-	public void insertKeyValue(Tuple tuple, String... parentKeys) {
-		if(parentKeys == null || parentKeys.length == 0  ||
-			tuple.getKey() == null || tuple.getValue() == null) {
-			throw new RuntimeException("Cannot insert a tuple without a key.");
-		}
-		
-		if(parentKeys.length == 1 && (parentKeys[0]).equals(this.key)) {
-			tuples.add(tuple);
-			return;
-		} else if(parentKeys.length == 1 && keyValue.get(parentKeys[0]) != null) {
-			keyValue.get(parentKeys[0]).insertKeyValue(tuple, parentKeys[0]);
-		} else {
-			List<String> q = new LinkedList<String>(Arrays.asList(parentKeys));	
-			String key = q.remove(0);
-			if(key.equals(this.key)) {
-				this.insertKeyValue(tuple, q.toArray(new String[q.size()]));
-			} else {
-				JsonData json = new JsonData(key);
-				keyValue.put(key, json);
-				if(! q.isEmpty()) {
-					json.insertKeyValue(tuple, q.toArray(new String[q.size()]));
-				}
-			}
-		}
-	}
-	
 	
 	@Override
 	public String toString() {
