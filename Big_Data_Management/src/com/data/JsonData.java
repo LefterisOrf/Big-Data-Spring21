@@ -67,7 +67,7 @@ public class JsonData {
 		return string;
 	}
 	
-	public JsonData fromString(String jsonData) {
+	public static JsonData fromString(String jsonData) {
 		String[] splitted = jsonData.split(":", 2);
 		String key = StringUtils.substringBetween(splitted[0], "\"");
 		String value = StringUtils.substringAfter(splitted[1], "{");
@@ -129,7 +129,7 @@ public class JsonData {
 		return parent;
 	}
 
-	private void popFromStackAccordingToTheNumberOfClosingTags(JsonData parent, Stack<JsonData> active,	String possibleTuple, JsonData json) {
+	private static void popFromStackAccordingToTheNumberOfClosingTags(JsonData parent, Stack<JsonData> active,	String possibleTuple, JsonData json) {
 		Integer matches = StringUtils.countMatches(possibleTuple, "}") ;
 		JsonData dato = null;
 		if(!active.isEmpty()) {
@@ -151,7 +151,7 @@ public class JsonData {
 		}
 	}
 	
-	private void popEverythingFromStack(JsonData parent, Stack<JsonData> active) {
+	private static void popEverythingFromStack(JsonData parent, Stack<JsonData> active) {
 		JsonData dato = null;
 		while(!active.isEmpty()) {
 			if(dato != null) {
@@ -165,7 +165,7 @@ public class JsonData {
 		}
 	}
 
-	private Tuple generateTupleFromString(String possibleTuple) {
+	private static Tuple generateTupleFromString(String possibleTuple) {
 		Tuple tuple = new Tuple();
 		if(possibleTuple.contains("}")) {
 			possibleTuple = StringUtils.substringBefore(possibleTuple, "}");
