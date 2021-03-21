@@ -11,7 +11,7 @@ import com.data.JsonData;
 import com.data.Tuple;
 import com.trie.Trie;
 
-public class Main {
+public class CreateData {
 	private static String filename;
 	private static Integer maxStringLength;
 	private static Integer lines;
@@ -26,7 +26,7 @@ public class Main {
 		readArguments(args);
 		readFile();
 		generateData();
-		System.out.println(trie);
+		System.out.println("Execution finished.");
 	}
 
 	private static void readArguments(String[] args) {
@@ -54,7 +54,13 @@ public class Main {
 			JsonData father = generateRandomSimpleData("key" + i);
 			insertNestedTuple(father);
 			trie.insertData(father);
-			System.out.println(father);
+			JsonData temp = JsonData.fromString(father.toString());
+			if(! temp.toString().equals(father.toString())) {
+				System.out.println("Mismatch between 2 generated JsonData.");
+				System.out.println("Original data: " + father);
+				System.out.println("Generated data: " + temp);
+				System.out.println("----------------------------------------");
+			}
 		}
 	}
 	
@@ -162,9 +168,6 @@ public class Main {
 			}
 		}
 		scanner.close();
-		for (String key : datatypes.keySet()) {
-			System.out.println(key + " " + datatypes.get(key).getSimpleName());
-		}
 	}
 	
 	private static boolean areArgumentsInvalid() {
