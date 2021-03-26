@@ -9,7 +9,6 @@ import java.util.Scanner;
 
 import com.data.JsonData;
 import com.data.Tuple;
-import com.trie.Trie;
 
 public class CreateData {
 	private static String filename;
@@ -20,7 +19,6 @@ public class CreateData {
 	private static char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
 	private static Map<String, Class<?>> datatypes= new HashMap<String, Class<?>>();
 	private static Random random = new Random(System.currentTimeMillis());
-	private static Trie trie = new Trie();
 	
 	public static void main(String args[]) throws FileNotFoundException {
 		readArguments(args);
@@ -53,14 +51,14 @@ public class CreateData {
 		for (int i = 0; i < lines; i++) {
 			JsonData father = generateRandomSimpleData("key" + i);
 			insertNestedTuple(father);
-			trie.insertData(father);
-			JsonData temp = JsonData.fromString(father.toString());
-			if(! temp.toString().equals(father.toString())) {
-				System.out.println("Mismatch between 2 generated JsonData.");
-				System.out.println("Original data: " + father);
-				System.out.println("Generated data: " + temp);
-				System.out.println("----------------------------------------");
-			}
+//			JsonData temp = JsonData.fromString(father.toString());
+//			if(! temp.toString().equals(father.toString())) {
+//				System.out.println("Mismatch between 2 generated JsonData.");
+//				System.out.println("Original data: " + father);
+//				System.out.println("Generated data: " + temp);
+//				System.out.println("----------------------------------------");
+//			}
+			System.out.println(father.toString());
 		}
 	}
 	
