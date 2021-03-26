@@ -23,12 +23,42 @@ public class JsonData {
 		keyValue = new HashMap<String, JsonData>();
 	}
 	
+	public String getChildKey(String... keys) {
+		if(keys == null || keys.length == 0 || keyValue.isEmpty()) {
+			return null;
+		}
+		JsonData child = null;
+		JsonData father = this;
+		for (int i = 0; i < keys.length; i++) {
+			child = father.getChild(keys[i]);
+			if(child == null) {
+				// search on tuples list.
+				return father.getFromTupleList(keys[i]);
+			}
+			father = child;
+		}
+		return child.toString();
+	}
+	
+	private JsonData getChild(String key) {
+		return keyValue.get(key);
+	}
+	
+	private String getFromTupleList(String key) {
+		for (Tuple tuple : tuples) {
+			if(tuple.getKey().equals(key)) {
+				return tuple.toString();
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public String toString() {
 		String string = null;
 		string = "\"" + key + "\" " + ": { " ;
 		for(int i = 0; i < tuples.size(); i++) {
-			string += tuples.get(i);
+			string += tuples.get(i) == null ? "" : tuples.get(i);
 			if(i < (tuples.size() - 1) || !keyValue.isEmpty()) {
 				string += " ; ";
 			}
@@ -43,14 +73,26 @@ public class JsonData {
 	}
 	
 	public static JsonData fromString(String jsonData) {
-		String[] splitted = jsonData.split(":", 2);
-		String key = StringUtils.substringBetween(splitted[0], "\"");
-		String value = StringUtils.substringAfter(splitted[1], "{");
+		String key = StringUtils.substringBefore(jsonData, ":");
+		key = StringUtils.substringBetween(key, "\"");
+		String value = StringUtils.substringAfter(jsonData, ":");
+		value = StringUtils.substringAfter(value, "{");
 		value = StringUtils.substringBeforeLast(value, "}");
+		if(key == null || key.isEmpty()) {
+			return null;
+		}
 		JsonData parent = new JsonData(key);
 		Stack<JsonData> active = new Stack<JsonData>();
 		while(true) {
+			if(value.trim().isEmpty()) {
+				break;
+			}
+			
 			String[] splittedVal = StringUtils.split(value, ";", 2);
+			if(splittedVal.length == 0) {
+				return null;
+			}
+			
 			String possibleTuple = splittedVal[0];
 			// Remove possibleTuple from value
 			if(splittedVal.length > 1) {
@@ -150,6 +192,9 @@ public class JsonData {
 	}
 
 	private static Tuple generateTupleFromString(String possibleTuple) {
+		if(possibleTuple == null || possibleTuple.trim().isEmpty()) {
+			return null;
+		}
 		Tuple tuple = new Tuple();
 		if(possibleTuple.contains("}")) {
 			possibleTuple = StringUtils.substringBefore(possibleTuple, "}");

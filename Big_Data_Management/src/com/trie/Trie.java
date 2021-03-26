@@ -1,5 +1,7 @@
 package com.trie;
 
+import java.util.Arrays;
+
 import com.data.JsonData;
 
 public class Trie {
@@ -10,7 +12,7 @@ public class Trie {
 		this.root = new Node();
 	}
 	
-	public String get(String key) {
+	public JsonData get(String key) {
 		char[] keyAr = key.toCharArray();
 		Node current = root;
 		for (int i = 0; i < keyAr.length; i++) {
@@ -20,16 +22,24 @@ public class Trie {
 				return null;
 			}
 		}
-		return current.getData() != null ?  current.getData().toString() : null;
+		return current.getData() != null ?  current.getData() : null;
 	}
 	
 	public String query(String key) {
 		// First of all split the key on '.' 
-		
+		String[] keys = key.split(".");
+		if(keys == null || keys.length == 0) {
+			return null;
+		}
 		// The high level key is in splitted[0] so we need to get(splitted[0])
-		
+		String primaryKey = keys[0];
+		JsonData data = get(primaryKey);
+		if(data == null) {
+			return null;
+		}
 		// Then iterate through the KeyValueMap of the node to find the subsequent keys.
-		return "";
+		String[] childKeys = Arrays.copyOfRange(keys, 1, keys.length);
+		return data.getChildKey(childKeys);
 	}
 	
 	public void insertData(JsonData data) {
