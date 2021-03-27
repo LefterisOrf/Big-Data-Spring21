@@ -2,6 +2,8 @@ package com.trie;
 
 import java.util.Arrays;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.data.JsonData;
 
 public class Trie {
@@ -27,9 +29,14 @@ public class Trie {
 	
 	public String query(String key) {
 		// First of all split the key on '.' 
-		String[] keys = key.split(".");
+		String[] keys = StringUtils.split(key, ".");
 		if(keys == null || keys.length == 0) {
-			return null;
+			//Key does not contain a '.' ( equals to a GET request )
+			JsonData data = get(key);
+			if(data != null)
+				return data.toString();
+			else 
+				return null;
 		}
 		// The high level key is in splitted[0] so we need to get(splitted[0])
 		String primaryKey = keys[0];
