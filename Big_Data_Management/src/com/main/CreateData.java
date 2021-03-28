@@ -8,7 +8,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 import com.data.JsonData;
-import com.data.Tuple;
+import com.data.JsonData.Tuple;
 
 public class CreateData {
 	private static String filename;

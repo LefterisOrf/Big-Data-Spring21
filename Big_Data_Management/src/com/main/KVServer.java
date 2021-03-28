@@ -1,5 +1,8 @@
 package com.main;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Scanner;
 
 import org.apache.commons.lang3.StringUtils;
@@ -8,11 +11,15 @@ import com.data.JsonData;
 import com.trie.Trie;
 
 public class KVServer {
-	
 	private static Trie trie = new Trie();
 	
-	public static void main(String[] args) {
-		Scanner scanner = new Scanner(System.in);
+	public static void main(String[] args) throws IOException {
+		ServerSocket sock = new ServerSocket(9001);
+		System.out.println("Succesfully created a ServerSocket on port: 9001");
+		Socket socket = sock.accept();
+		System.out.println("Accepted a connection.");
+		
+		Scanner scanner = new Scanner(socket.getInputStream());
 		System.out.println("Type your query: \n");
 		while(scanner.hasNextLine()) {
 			String line = scanner.nextLine();
@@ -52,6 +59,9 @@ public class KVServer {
 			System.out.println("Type your query: \n");
 		}
 		scanner.close();
+		socket.close();
+		sock.close();
+		
 		System.out.println("KV Server with id: " + Thread.currentThread().getId() + " will exit.");
 	}
 	
