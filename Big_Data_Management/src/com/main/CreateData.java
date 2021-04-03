@@ -134,7 +134,7 @@ public class CreateData {
 	private static void readFile() throws FileNotFoundException {
 		File file = new File(filename);
 		if(! file.exists() || !file.canRead()) {
-			throw new RuntimeException("File cannot be opened.");
+			throw new RuntimeException("File cannot be opened. Filename: " + filename + " path : " + file.getAbsolutePath());
 		}
 		Scanner scanner = new Scanner(file);
 		while(scanner.hasNextLine()) {
