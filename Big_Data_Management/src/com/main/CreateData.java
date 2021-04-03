@@ -24,7 +24,6 @@ public class CreateData {
 		readArguments(args);
 		readFile();
 		generateData();
-		System.out.println("Execution finished.");
 	}
 
 	private static void readArguments(String[] args) {
@@ -58,7 +57,7 @@ public class CreateData {
 //				System.out.println("Generated data: " + temp);
 //				System.out.println("----------------------------------------");
 //			}
-			System.out.println(father.toString());
+			System.out.print(father.toString() + System.lineSeparator());
 		}
 	}
 	

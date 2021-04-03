@@ -1,6 +1,7 @@
 package com.main;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.Scanner;
 
 import org.apache.commons.lang3.StringUtils;
 
+
 public class KVBroker {
 	
 	private static List<Socket> sockets = new ArrayList<Socket>();
@@ -26,8 +28,12 @@ public class KVBroker {
 	private static Integer replicationFactor;
 	
 	public static void main(String[] args) throws UnknownHostException, IOException {
+		if(args == null || args.length == 0) {
+			throw new RuntimeException("No arguments given.");
+		}
 		for (int index = 0; index < args.length; index++) {
 			String string = args[index];
+			System.out.println(string);
 			if("-s".equals(string)) {
 				serverFilename = args[index + 1];
 			} else if("-i".equals(string)) {
@@ -35,6 +41,9 @@ public class KVBroker {
 			} else if("-k".equals(string)) {
 				replicationFactor = Integer.parseInt(args[index + 1]);
 			}
+		}
+		if(areArgumentsInvalid()) {
+			throw new RuntimeException("Invalid arguments given.");
 		}
 		establishConnections();
 		readData();
@@ -44,14 +53,22 @@ public class KVBroker {
 		closeConnections();
 	}
 	
+	private static boolean areArgumentsInvalid() {
+		if(serverFilename == null || dataFilename == null || replicationFactor == null ) {
+			return true;
+		}
+		return false;
+	}
+
 	private static void insertData() {
 		for(String dato : data) {
 			List<Socket> kSocks = getKSockets();
 			for (Socket sock : kSocks) {
 				try {
-					PrintWriter writer = new PrintWriter(sock.getOutputStream());
-					writer.append("PUT " + dato);
+					BufferedWriter writer = new BufferedWriter(new PrintWriter(sock.getOutputStream()));
 					BufferedReader reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+					writer.append("PUT " + dato + System.lineSeparator());
+					writer.flush();
 					String response = reader.readLine();
 					if("OK".equalsIgnoreCase(response)) {
 						System.out.println("Successfully inserted data: [ " + dato + " ] to server running on port: " + sock.getPort());
@@ -106,14 +123,14 @@ public class KVBroker {
 	private static void establishConnections() throws UnknownHostException, IOException {
 		File file = new File(serverFilename);
 		if(! file.exists() || !file.canRead()) {
-			throw new RuntimeException("File not found.");
+			throw new RuntimeException("File not found. File:" + file.getAbsolutePath());
 		}
 		Scanner scanner = new Scanner(file);
 		while(scanner.hasNextLine()) {
 			String line = scanner.nextLine();
 			String host = StringUtils.substringBefore(line, " ");
 			Integer port = Integer.parseInt(StringUtils.substringAfter(line, " "));
-			
+			System.out.println("Socket: " + host + " " + port);
 			Socket socket = new Socket(InetAddress.getByName(host), port);
 			sockets.add(socket);
 		}
@@ -123,7 +140,7 @@ public class KVBroker {
 	private static void readData() throws FileNotFoundException {
 		File file = new File(dataFilename);
 		if(! file.exists() || !file.canRead()) {
-			throw new RuntimeException("File not found.");
+			throw new RuntimeException("File not found. File: " + file.getAbsolutePath());
 		}
 		Scanner scanner = new Scanner(file);
 		while(scanner.hasNextLine()) {

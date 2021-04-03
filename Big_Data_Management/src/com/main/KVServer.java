@@ -1,6 +1,7 @@
 package com.main;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -21,9 +22,11 @@ public class KVServer {
 		System.out.println("Accepted a connection.");
 		
 		Scanner scanner = new Scanner(socket.getInputStream());
+		PrintWriter writer = new PrintWriter(socket.getOutputStream());
 		System.out.println("Type your query: \n");
 		while(scanner.hasNextLine()) {
 			String line = scanner.nextLine();
+			System.out.println("Received the following command: " + line);
 			if(line.equalsIgnoreCase("Exit")) {
 				break;
 			}
@@ -50,14 +53,14 @@ public class KVServer {
 				String jsonData = StringUtils.substringAfter(line, " ");
 				JsonData data = JsonData.fromString(jsonData);
 				if(data == null) {
-					System.out.println("Invalid put operation.");
+					writer.append("Invalid put operation. \n");
 					continue;
 				}
 				trie.insertData(data);
 			} else {
-				System.out.println("Invalid query, please check your spelling.");
+				writer.append("Invalid query, please check your spelling. \n");
 			}
-			System.out.println("Type your query: \n");
+			writer.append("Type your query: \n");
 		}
 		scanner.close();
 		socket.close();
