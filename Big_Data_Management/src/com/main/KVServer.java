@@ -1,6 +1,7 @@
 package com.main;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -14,7 +15,7 @@ public class KVServer {
 	private static Trie trie = new Trie();
 	
 	public static void main(String[] args) throws IOException {
-		ServerSocket sock = new ServerSocket(9001);
+		ServerSocket sock = new ServerSocket(9001, 50, InetAddress.getByName("127.0.0.1"));
 		System.out.println("Succesfully created a ServerSocket on port: 9001");
 		Socket socket = sock.accept();
 		System.out.println("Accepted a connection.");
