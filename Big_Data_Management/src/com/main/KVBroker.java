@@ -146,6 +146,7 @@ public class KVBroker {
 			
 		}
 		scanner.close();
+		System.out.println("Finished reading data from input file.");
 	}
 	
 	private static void closeConnections() {

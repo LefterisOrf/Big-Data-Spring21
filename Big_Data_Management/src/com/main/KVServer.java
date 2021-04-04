@@ -23,10 +23,8 @@ public class KVServer {
 		
 		Scanner scanner = new Scanner(socket.getInputStream());
 		PrintWriter writer = new PrintWriter(socket.getOutputStream());
-		System.out.println("Type your query: \n");
 		while(scanner.hasNextLine()) {
 			String line = scanner.nextLine();
-			System.out.println("Received the following command: " + line);
 			if(line.equalsIgnoreCase("Exit")) {
 				break;
 			}
@@ -36,30 +34,30 @@ public class KVServer {
 				String key = StringUtils.substringAfter(line, " ");
 				JsonData data = trie.get(key);
 				if(data == null) {
-					System.out.println("Key was not found.");
+					writer.append("ERROR - Key was not found. \n").flush();
 				} else {
-					System.out.println(data.toString());
+					writer.append(data.toString() + " \n").flush();
 				}
 			} else if(StringUtils.contains(line, "QUERY")) {
 				// query query
 				String key = StringUtils.substringAfter(line, " ");
 				String data = trie.query(key);
 				if(data == null) {
-					System.out.println("Key was not found.");
+					writer.append("ERROR - Key was not found. \n");
 				} else {
-					System.out.println(data);
+					writer.append(data + "\n").flush();
 				}
 			} else if(StringUtils.contains(line, "PUT")) {
 				String jsonData = StringUtils.substringAfter(line, " ");
 				JsonData data = JsonData.fromString(jsonData);
 				if(data == null) {
-					writer.append("Invalid put operation. \n").flush();
+					writer.append("ERROR - Invalid put operation. \n").flush();
 					continue;
 				}
 				trie.insertData(data);
 				writer.append("OK \n").flush();
 			} else {
-				writer.append("Invalid query, please check your spelling. \n");
+				writer.append("Invalid query, please check your spelling. \n").flush();
 			}
 		}
 		scanner.close();
