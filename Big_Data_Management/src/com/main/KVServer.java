@@ -53,7 +53,7 @@ public class KVServer {
 				String jsonData = StringUtils.substringAfter(line, " ");
 				JsonData data = JsonData.fromString(jsonData);
 				if(data == null) {
-					writer.append("Invalid put operation. \n").flush();;
+					writer.append("Invalid put operation. \n").flush();
 					continue;
 				}
 				trie.insertData(data);
