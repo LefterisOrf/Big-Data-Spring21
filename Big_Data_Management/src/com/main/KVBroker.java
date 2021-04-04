@@ -70,12 +70,13 @@ public class KVBroker {
 					writer.append("PUT " + dato + System.lineSeparator());
 					writer.flush();
 					String response = reader.readLine();
-					if("OK".equalsIgnoreCase(response)) {
-						System.out.println("Successfully inserted data: [ " + dato + " ] to server running on port: " + sock.getPort());
-						continue;
-					} else {
-						System.out.println("ERROR - Could not write data: [ " + dato + " ] to server running on port: " + sock.getPort());
-					}
+					System.err.println("Response: " + response);
+//					if("OK".equalsIgnoreCase(response)) {
+//						System.out.println("Successfully inserted data: [ " + dato + " ] to server running on port: " + sock.getPort());
+//						continue;
+//					} else {
+//						System.out.println("ERROR - Could not write data: [ " + dato + " ] to server running on port: " + sock.getPort());
+//					}
 				} catch (IOException e) {
 					System.out.println("Could not write to socket: " + sock.getPort() + " IOException");
 				}

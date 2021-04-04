@@ -31,7 +31,7 @@ public class KVServer {
 				break;
 			}
 			
-			if(StringUtils.containsIgnoreCase(line, "GET")) {
+			if(StringUtils.contains(line, "GET")) {
 				// get query
 				String key = StringUtils.substringAfter(line, " ");
 				JsonData data = trie.get(key);
@@ -40,7 +40,7 @@ public class KVServer {
 				} else {
 					System.out.println(data.toString());
 				}
-			} else if(StringUtils.containsIgnoreCase(line, "QUERY")) {
+			} else if(StringUtils.contains(line, "QUERY")) {
 				// query query
 				String key = StringUtils.substringAfter(line, " ");
 				String data = trie.query(key);
@@ -49,18 +49,18 @@ public class KVServer {
 				} else {
 					System.out.println(data);
 				}
-			} else if(StringUtils.containsIgnoreCase(line, "PUT")) {
+			} else if(StringUtils.contains(line, "PUT")) {
 				String jsonData = StringUtils.substringAfter(line, " ");
 				JsonData data = JsonData.fromString(jsonData);
 				if(data == null) {
-					writer.append("Invalid put operation. \n");
+					writer.append("Invalid put operation. \n").flush();;
 					continue;
 				}
 				trie.insertData(data);
+				writer.append("OK \n").flush();
 			} else {
 				writer.append("Invalid query, please check your spelling. \n");
 			}
-			writer.append("Type your query: \n");
 		}
 		scanner.close();
 		socket.close();
