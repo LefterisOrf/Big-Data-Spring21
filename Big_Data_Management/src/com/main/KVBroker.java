@@ -5,7 +5,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +26,17 @@ public class KVBroker {
 	private static Integer replicationFactor;
 	
 	public static void main(String[] args) throws UnknownHostException, IOException {
+		readArguments(args);
+		establishConnections();
+		readData();
+		insertData();
+		
+		userCommands();
+		
+		closeConnections();
+	}
+
+	private static void readArguments(String[] args) {
 		if(args == null || args.length == 0) {
 			throw new RuntimeException("No arguments given.");
 		}
@@ -44,13 +54,6 @@ public class KVBroker {
 		if(areArgumentsInvalid()) {
 			throw new RuntimeException("Invalid arguments given.");
 		}
-		establishConnections();
-		readData();
-		insertData();
-		
-		userCommands();
-		
-		closeConnections();
 	}
 	
 	private static void userCommands() {
@@ -59,10 +62,17 @@ public class KVBroker {
 			String line = scanner.nextLine();
 			if(line.startsWith("GET")) {
 				// traverse all servers and return the data of the first one that answers smthing other than ERROR
+				System.out.println(getOrQuery(line));
 			} else if(line.startsWith("QUERY")) {
 				// traverse all servers and return the data of the first one that answers smthing other than ERROR
+				System.out.println(getOrQuery(line));
 			} else if(line.startsWith("DELETE")) {
 				// check if all servers are UP, if not print a message that the DELETE operation cannot be executed.
+				if(areAllServersUp()) {
+					delete(line);
+				} else {
+					System.out.println("DELETE operation because not all servers are up.");
+				}
 			} else if(line.startsWith("PUT")) {
 				// might not be needed 
 			} else if(line.startsWith("EXIT")) {
@@ -93,6 +103,41 @@ public class KVBroker {
 				}
 			}
 		}
+	}
+	
+	private static String getOrQuery(String command) {
+		List<SocketDetails> kSocks = getKSockets();
+		for (SocketDetails sock : kSocks) {
+			try {
+				BufferedWriter writer = sock.getWriter();
+				BufferedReader reader = sock.getReader();
+				writer.append(command + System.lineSeparator()).flush();;
+				String response = reader.readLine();
+				if (! StringUtils.containsIgnoreCase(response, "ERROR")) {
+					return response;
+				}
+			} catch (IOException e) {
+				System.out.println("Could not write to socket: " + sock.getPort() + " IOException");
+			}
+		}
+		return "NOT FOUND";
+	}
+	
+	private static String delete(String command) {
+		for (SocketDetails sock : sockets) {
+			try {
+				BufferedWriter writer = sock.getWriter();
+				BufferedReader reader = sock.getReader();
+				writer.append(command + System.lineSeparator()).flush();;
+				String response = reader.readLine();
+				if (! StringUtils.containsIgnoreCase(response, "ERROR")) {
+					return response;
+				}
+			} catch (IOException e) {
+				System.out.println("Could not write to socket: " + sock.getPort() + " IOException");
+			}
+		}
+		return "NOT FOUND";
 	}
 	
 	private static List<SocketDetails> getKSockets() {
@@ -177,11 +222,20 @@ public class KVBroker {
 		return false;
 	}
 	
-	private static boolean pingSocket(Socket sock) {
+	private static boolean areAllServersUp() {
+		for(SocketDetails socket : sockets) {
+			if(!pingSocket(socket)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private static boolean pingSocket(SocketDetails socket) {
 		try {
-			return sock.getInetAddress().isReachable(300);
+			socket.getWriter().append("PING \n").flush();
+			return true;
 		} catch (IOException e) {
-			System.out.println("IOException when pinging socket: " + sock.getPort());
 			return false;
 		}
 	}

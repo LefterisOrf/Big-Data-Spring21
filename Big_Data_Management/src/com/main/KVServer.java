@@ -12,12 +12,22 @@ import org.apache.commons.lang3.StringUtils;
 import com.data.JsonData;
 import com.trie.Trie;
 
+/**
+ * 
+ * @author LefterisOrf
+ * Compile with: 
+ * Run with: java -cp "build;src\resources\commons-lang3-3.12.0.jar" com.main.KVServer -a localhost -p 9001
+ *
+ */
 public class KVServer {
+	private static String server;
+	private static Integer port;
 	private static Trie trie = new Trie();
 	
 	public static void main(String[] args) throws IOException {
-		ServerSocket sock = new ServerSocket(9001, 50, InetAddress.getByName("127.0.0.1"));
-		System.out.println("Succesfully created a ServerSocket on port: 9001");
+		readArguments(args);
+		ServerSocket sock = new ServerSocket(port, 50, InetAddress.getByName(server));
+		System.out.println("Succesfully created a ServerSocket on port: " + port);
 		Socket socket = sock.accept();
 		System.out.println("Accepted a connection.");
 		
@@ -56,8 +66,10 @@ public class KVServer {
 				}
 				trie.insertData(data);
 				writer.append("OK \n").flush();
+			} else if(StringUtils.contains(line, "PING")) {
+				writer.append("OK \n").flush();
 			} else {
-				writer.append("Invalid query, please check your spelling. \n").flush();
+				writer.append("Invalid query.\n").flush();
 			}
 		}
 		scanner.close();
@@ -66,5 +78,29 @@ public class KVServer {
 		
 		System.out.println("KV Server with id: " + Thread.currentThread().getId() + " will exit.");
 	}
+
+	private static void readArguments(String[] args) {
+		if(args == null || args.length == 0) {
+			throw new RuntimeException("No arguments given.");
+		}
+		for (int index = 0; index < args.length; index++) {
+			String string = args[index];
+			System.out.println(string);
+			if("-a".equals(string)) {
+				server = args[index + 1];
+			} else if("-p".equals(string)) {
+				port = Integer.parseInt(args[index + 1]);
+			}
+		}
+		if(areArgumentsInvalid()) {
+			throw new RuntimeException("Invalid arguments given.");
+		}
+	}
 	
+	private static boolean areArgumentsInvalid() {
+		if(server == null || server.isEmpty() || port == null ) {
+			return true;
+		}
+		return false;
+	}
 }
