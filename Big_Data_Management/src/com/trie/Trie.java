@@ -51,6 +51,30 @@ public class Trie {
 		return data.getChildKey(childKeys);
 	}
 	
+	public boolean delete(String key) {
+		char[] keyAr = key.toCharArray();
+		Node current = root;
+		for (int i = 0; i < keyAr.length; i++) {
+			char c = keyAr[i];
+			current = current.getChild(c);
+			if(current == null) {
+				return false;
+			}
+		}
+		JsonData dataToBeRemoved = current.getData();
+		if(dataToBeRemoved != null) {
+			current.setData(null);
+		}
+		
+		Node parent;
+		while((parent = current.getParent()) != null && current.getChildren().isEmpty()) {
+			parent.getChildren().remove(current.getCurrentKey());
+		}
+		 
+		return true;
+	}
+	
+	
 	public void insertData(JsonData data) {
 		char[] keys = data.getKey().toCharArray();
 		Node current = root;
@@ -60,9 +84,10 @@ public class Trie {
 				// create a Node for each of the remaining keys and set the JsonData to the last one.
 				Node nodeChain = createNodeForEachRemainigKey(keys, i, data);
 				current.putChild(nodeChain.getCurrentKey(), nodeChain);
+				nodeChain.setParent(current);
 				break;
 			} else if( i == keys.length - 1){
-				// if the last key set it in value
+				// if the last key set it in value. Overwrites any possible previous data.
 				node.setData(data);
 				break;
 			} else {
@@ -78,6 +103,7 @@ public class Trie {
 			Node node = new Node(keys[j]);
 			if(previous != null) {
 				node.putChild(previous.getCurrentKey(), previous);
+				previous.setParent(node);
 			} else {
 				//First iteration means we are at the last char of the key
 				node.setData(data);
@@ -93,7 +119,8 @@ public class Trie {
 	 * Holds the key of the node, a Map to the children nodes 
 	 * along with a JsonData reference in case we are at a complete node. 
 	 */
-	private static class Node {
+	public static class Node {
+		private Node parent;
 		private Character currentKey;
 		private Map<Character, Node> children;
 		private JsonData data;
@@ -104,6 +131,7 @@ public class Trie {
 		}
 		
 		public Node() {
+			this.parent = null;
 			this.data = null;
 			this.children = new HashMap<Character, Node>();
 			this.currentKey = null;
@@ -129,9 +157,16 @@ public class Trie {
 			return currentKey;
 		}
 
-		@SuppressWarnings("unused")
 		public Map<Character, Node> getChildren() {
 			return children;
+		}
+
+		public Node getParent() {
+			return parent;
+		}
+
+		public void setParent(Node parent) {
+			this.parent = parent;
 		}
 	}
 	

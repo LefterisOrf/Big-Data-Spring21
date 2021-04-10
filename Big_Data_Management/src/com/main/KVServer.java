@@ -1,11 +1,13 @@
 package com.main;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,7 +17,7 @@ import com.trie.Trie;
 /**
  * 
  * @author LefterisOrf
- * Compile with: 
+ * Compile with: javac -sourcepath src -d build src/com/**\/*.java -cp "src/resources/commons-lang3-3.12.0.jar"
  * Run with: java -cp "build;src\resources\commons-lang3-3.12.0.jar" com.main.KVServer -a localhost -p 9001
  *
  */
@@ -31,10 +33,10 @@ public class KVServer {
 		Socket socket = sock.accept();
 		System.out.println("Accepted a connection.");
 		
-		Scanner scanner = new Scanner(socket.getInputStream());
-		PrintWriter writer = new PrintWriter(socket.getOutputStream());
-		while(scanner.hasNextLine()) {
-			String line = scanner.nextLine();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		BufferedWriter writer = new BufferedWriter(new PrintWriter(socket.getOutputStream()));
+		String line;
+		while((line = reader.readLine()) != null) {
 			if(line.equalsIgnoreCase("Exit")) {
 				break;
 			}
@@ -44,35 +46,36 @@ public class KVServer {
 				String key = StringUtils.substringAfter(line, " ");
 				JsonData data = trie.get(key);
 				if(data == null) {
-					writer.append("ERROR - Key was not found. \n").flush();
+					writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
 				} else {
-					writer.append(data.toString() + " \n").flush();
+					writer.append(data.toString()  + System.lineSeparator()).flush();
 				}
 			} else if(StringUtils.contains(line, "QUERY")) {
 				// query query
 				String key = StringUtils.substringAfter(line, " ");
 				String data = trie.query(key);
 				if(data == null) {
-					writer.append("ERROR - Key was not found. \n");
+					writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
 				} else {
-					writer.append(data + "\n").flush();
+					writer.append(data  + System.lineSeparator()).flush();
 				}
 			} else if(StringUtils.contains(line, "PUT")) {
 				String jsonData = StringUtils.substringAfter(line, " ");
 				JsonData data = JsonData.fromString(jsonData);
 				if(data == null) {
-					writer.append("ERROR - Invalid put operation. \n").flush();
+					writer.append("ERROR - Invalid put operation." + System.lineSeparator()).flush();
 					continue;
 				}
 				trie.insertData(data);
-				writer.append("OK \n").flush();
+				writer.append("OK" + System.lineSeparator()).flush();
+			} else if(StringUtils.contains(line, "DELETE")) {
 			} else if(StringUtils.contains(line, "PING")) {
-				writer.append("OK \n").flush();
+				writer.append("OK" + System.lineSeparator()).flush();
 			} else {
-				writer.append("Invalid query.\n").flush();
+				writer.append("Invalid query." + System.lineSeparator()).flush();
 			}
 		}
-		scanner.close();
+		reader.close();
 		socket.close();
 		sock.close();
 		

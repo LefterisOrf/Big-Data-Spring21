@@ -69,7 +69,7 @@ public class KVBroker {
 			} else if(line.startsWith("DELETE")) {
 				// check if all servers are UP, if not print a message that the DELETE operation cannot be executed.
 				if(areAllServersUp()) {
-					delete(line);
+					System.out.println(delete(line));
 				} else {
 					System.out.println("DELETE operation because not all servers are up.");
 				}
@@ -91,8 +91,7 @@ public class KVBroker {
 				try {
 					BufferedWriter writer = sock.getWriter();
 					BufferedReader reader = sock.getReader();
-					writer.append("PUT " + dato + System.lineSeparator());
-					writer.flush();
+					writer.append("PUT " + dato + System.lineSeparator()).flush();
 					String response = reader.readLine();
 					System.err.println("Response: " + response);
 					if(StringUtils.containsIgnoreCase(response, "ERROR")) {
@@ -111,7 +110,7 @@ public class KVBroker {
 			try {
 				BufferedWriter writer = sock.getWriter();
 				BufferedReader reader = sock.getReader();
-				writer.append(command + System.lineSeparator()).flush();;
+				writer.append(command + System.lineSeparator()).flush();
 				String response = reader.readLine();
 				if (! StringUtils.containsIgnoreCase(response, "ERROR")) {
 					return response;
@@ -128,7 +127,7 @@ public class KVBroker {
 			try {
 				BufferedWriter writer = sock.getWriter();
 				BufferedReader reader = sock.getReader();
-				writer.append(command + System.lineSeparator()).flush();;
+				writer.append(command + System.lineSeparator()).flush();
 				String response = reader.readLine();
 				if (! StringUtils.containsIgnoreCase(response, "ERROR")) {
 					return response;
@@ -233,7 +232,7 @@ public class KVBroker {
 	
 	private static boolean pingSocket(SocketDetails socket) {
 		try {
-			socket.getWriter().append("PING \n").flush();
+			socket.getWriter().append("PING" + System.lineSeparator()).flush();
 			return true;
 		} catch (IOException e) {
 			return false;
