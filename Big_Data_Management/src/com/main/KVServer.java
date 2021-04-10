@@ -69,8 +69,13 @@ public class KVServer {
 				trie.insertData(data);
 				writer.append("OK" + System.lineSeparator()).flush();
 			} else if(StringUtils.contains(line, "DELETE")) {
+				if(trie.delete(StringUtils.substringAfter(line, " "))) {
+					writer.append("OK" + System.lineSeparator()).flush();
+				} else {
+					writer.append("ERROR - KEY NOT FOUND" + System.lineSeparator()).flush();
+				}
 			} else if(StringUtils.contains(line, "PING")) {
-				writer.append("OK" + System.lineSeparator()).flush();
+				continue;
 			} else {
 				writer.append("Invalid query." + System.lineSeparator()).flush();
 			}

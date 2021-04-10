@@ -64,11 +64,14 @@ public class Trie {
 		JsonData dataToBeRemoved = current.getData();
 		if(dataToBeRemoved != null) {
 			current.setData(null);
+		} else {
+			return false; //No data found.
 		}
 		
 		Node parent;
 		while((parent = current.getParent()) != null && current.getChildren().isEmpty()) {
 			parent.getChildren().remove(current.getCurrentKey());
+			current = parent;
 		}
 		 
 		return true;
