@@ -69,7 +69,7 @@ public class Trie {
 		}
 		
 		Node parent;
-		while((parent = current.getParent()) != null && current.getChildren().isEmpty()) {
+		while((parent = current.getParent()) != null && current.getChildren().isEmpty() && current.getData() != null) {
 			parent.getChildren().remove(current.getCurrentKey());
 			current = parent;
 		}
