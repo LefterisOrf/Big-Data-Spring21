@@ -7,8 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 
 import org.apache.commons.lang3.StringUtils;
@@ -20,7 +20,6 @@ public class KVBroker {
 	
 	private static List<SocketDetails> sockets = new ArrayList<SocketDetails>();
 	private static List<String> data = new ArrayList<String>();
-	private static Random rand = new Random(System.currentTimeMillis());
 	private static String serverFilename;
 	private static String dataFilename;
 	private static Integer replicationFactor;
@@ -139,37 +138,13 @@ public class KVBroker {
 		return "NOT FOUND";
 	}
 	
+	/**
+	 * 
+	 * @return k servers from the available server list. 
+	 */
 	private static List<SocketDetails> getKSockets() {
-		if(replicationFactor == sockets.size()) {
-			return sockets;
-		} else if(replicationFactor == sockets.size() - 1) {
-			return sockets.subList(1, sockets.size());
-		} else if(replicationFactor > sockets.size()) {
-			throw new RuntimeException("Replication factor is bigger than the available servers.");
-		}
-		// Else select randomly k servers from the socket list.
-		List<SocketDetails> socks = new ArrayList<SocketDetails>();
-		SocketDetails lastSocket = null;
-		while(socks.size() <= replicationFactor) {
-			SocketDetails cur = getRandomSocket();
-			if(cur != lastSocket) {
-				socks.add(cur);
-				lastSocket = cur;
-			}
-		}
-		return socks;
-	}
-	
-	private static SocketDetails getRandomSocket() {
-		if(sockets == null || sockets.isEmpty()) {
-			throw new RuntimeException("No socket found");
-		}
-		
-		if(sockets.size() == 1) {
-			return sockets.get(0);
-		}
-		Integer index = rand.nextInt(sockets.size());
-		return sockets.get(index);
+		Collections.shuffle(sockets);
+		return sockets.subList(0, replicationFactor);
 	}
 	
 	private static void establishConnections() throws UnknownHostException, IOException {
