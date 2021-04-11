@@ -12,7 +12,7 @@ import java.net.Socket;
 import org.apache.commons.lang3.StringUtils;
 
 import com.data.JsonData;
-import com.data.Trie;
+import com.trie.Trie;
 
 /**
  * 

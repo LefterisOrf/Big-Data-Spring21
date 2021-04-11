@@ -1,176 +1,169 @@
 package com.trie;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import com.data.interfaces.KVClass;
 
-import com.data.JsonData;
+public class Trie<E extends KVClass> {
 
-public class Trie {
-
-	private Node root;
+	private Node<E> root;
+	private List<String> keys;
 	
 	public Trie() {
-		this.root = new Node();
+		this.root = new Node<E>();
+		this.keys = new ArrayList<String>();
 	}
 	
-	public JsonData get(String key) {
-		char[] keyAr = key.toCharArray();
-		Node current = root;
-		for (int i = 0; i < keyAr.length; i++) {
-			char c = keyAr[i];
-			current = current.getChild(c);
-			if(current == null) {
-				return null;
-			}
-		}
-		return current.getData() != null ?  current.getData() : null;
-	}
-	
-	public String query(String key) {
-		// First of all split the key on '.' 
-		String[] keys = StringUtils.split(key, ".");
-		if(keys == null || keys.length == 0) {
-			//Key does not contain a '.' ( equals to a GET request )
-			JsonData data = get(key);
-			if(data != null)
-				return data.toString();
-			else 
-				return null;
-		}
-		// The high level key is in splitted[0] so we need to get(splitted[0])
-		String primaryKey = keys[0];
-		JsonData data = get(primaryKey);
-		if(data == null) {
-			return null;
-		}
-		// Then iterate through the KeyValueMap of the node to find the subsequent keys.
-		String[] childKeys = Arrays.copyOfRange(keys, 1, keys.length);
-		return data.getChildKey(childKeys);
+	public E get(String key) {
+		Node<E> current = find(key);
+		return current != null ?  current.getPayload() : null;
 	}
 	
 	public boolean delete(String key) {
-		char[] keyAr = key.toCharArray();
-		Node current = root;
-		for (int i = 0; i < keyAr.length; i++) {
-			char c = keyAr[i];
-			current = current.getChild(c);
-			if(current == null) {
-				return false;
-			}
-		}
-		JsonData dataToBeRemoved = current.getData();
-		if(dataToBeRemoved != null) {
-			current.setData(null);
-		} else {
-			return false; //No data found.
+		Node<E> temp;
+		if((temp = find(key)) == null) {
+			return false;
 		}
 		
-		Node parent;
-		while((parent = current.getParent()) != null && current.getChildren().isEmpty() && current.getData() != null) {
-			parent.getChildren().remove(current.getCurrentKey());
-			current = parent;
+		if(temp.getPayload() == null) {
+			return false;
 		}
-		 
+		
+		temp.setPayload(null);
+		Node<E> parent;
+		while((parent = temp.getParent()) != null && temp.getChildren().isEmpty() && temp.getPayload() != null) {
+			parent.getChildren().remove(temp.getKey());
+			temp = parent;
+		}
+		keys.remove(key);
 		return true;
 	}
 	
-	
-	public void insertData(JsonData data) {
-		char[] keys = data.getKey().toCharArray();
-		Node current = root;
+	public boolean insert(E payload) {
+		if(payload == null) {
+			return false;
+		}
+		char[] keys = payload.getKey().toCharArray();
+		Node<E> current = root;
 		for(int i = 0; i < keys.length; i++) {
-			Node node = current.getChild(keys[i]);
+			Node<E> node = current.get(keys[i]);
 			if(node == null) {
 				// create a Node for each of the remaining keys and set the JsonData to the last one.
-				Node nodeChain = createNodeForEachRemainigKey(keys, i, data);
-				current.putChild(nodeChain.getCurrentKey(), nodeChain);
+				Node<E> nodeChain = createNodeForEachRemainigKey(keys, i, payload);
+				current.insert(nodeChain.getKey(), nodeChain);
 				nodeChain.setParent(current);
 				break;
 			} else if( i == keys.length - 1){
 				// if the last key set it in value. Overwrites any possible previous data.
-				node.setData(data);
+				node.setPayload(payload);
 				break;
 			} else {
 				current = node;
 				continue;
 			}
 		}
+		this.keys.add(payload.getKey());
+		return true;
 	}
-
-	private Node createNodeForEachRemainigKey(char[] keys, int i, JsonData data) {
-		Node previous = null;
+	
+	public boolean isEmpty() {
+		if(root == null || (root.getPayload() == null && root.getChildren().isEmpty())) {
+			return true;
+		}
+		return false;
+	}
+	
+	private Node<E> createNodeForEachRemainigKey(char[] keys, int i, E data) {
+		Node<E> previous = null;
 		for(int j = keys.length - 1; j >= i; j--) {
-			Node node = new Node(keys[j]);
+			Node<E> node = new Node<>(keys[j]);
 			if(previous != null) {
-				node.putChild(previous.getCurrentKey(), previous);
+				node.insert(previous.getKey(), previous);
 				previous.setParent(node);
 			} else {
 				//First iteration means we are at the last char of the key
-				node.setData(data);
+				node.setPayload(data);
 			}
 			previous = node;
 		}
 		return previous;
 	}
 	
-	
-	
-	/*
-	 * Holds the key of the node, a Map to the children nodes 
-	 * along with a JsonData reference in case we are at a complete node. 
-	 */
-	public static class Node {
-		private Node parent;
-		private Character currentKey;
-		private Map<Character, Node> children;
-		private JsonData data;
-		
-		public Node(Character key) {
-			this();
-			this.currentKey = key;
+	private Node<E> find(String key) {
+		char[] keyAr = key.toCharArray();
+		Node<E> current = root;
+		for (int i = 0; i < keyAr.length; i++) {
+			char c = keyAr[i];
+			current = current.get(c);
+			if(current == null) {
+				return null;
+			}
 		}
+		return current.getPayload() != null ?  current : null;
+	}
+	
+	public List<String> getKeys() {
+		return keys;
+	}
+
+	public static class Node<E> {
+		private Node<E> parent;
+		private Character key;
+		private HashMap<Character, Node<E>> children;
+		private E payload;
 		
 		public Node() {
 			this.parent = null;
-			this.data = null;
-			this.children = new HashMap<Character, Node>();
-			this.currentKey = null;
+			this.children = new HashMap<Character, Trie.Node<E>>();
 		}
 		
-		public Node getChild(Character c) {
-			return children.get(c);
+		public Node(Character key) {
+			this();
+			this.key = key;
+			this.payload = null;
 		}
 		
-		public void putChild(Character c, Node node) {
-			this.children.put(c, node);
+		public Node(Character key, E payload) {
+			this(key);
+			this.payload = payload;
 		}
-
-		public JsonData getData() {
-			return data;
+		
+		public Node<E> get(Character key) {
+			return children.get(key);
 		}
-
-		public void setData(JsonData data) {
-			this.data = data;
+		
+		public void insert(Character key, Node<E> node) {
+			this.children.put(key, node);
 		}
-
-		public Character getCurrentKey() {
-			return currentKey;
+		
+		public Character getKey() {
+			return key;
 		}
-
-		public Map<Character, Node> getChildren() {
+		public void setKey(Character key) {
+			this.key = key;
+		}
+		public HashMap<Character, Node<E>> getChildren() {
 			return children;
 		}
+		public void setChildren(HashMap<Character, Node<E>> children) {
+			this.children = children;
+		}
+		public E getPayload() {
+			return payload;
+		}
+		public void setPayload(E payload) {
+			this.payload = payload;
+		}
 
-		public Node getParent() {
+		public Node<E> getParent() {
 			return parent;
 		}
 
-		public void setParent(Node parent) {
+		public void setParent(Node<E> parent) {
 			this.parent = parent;
 		}
+		
 	}
-	
 }

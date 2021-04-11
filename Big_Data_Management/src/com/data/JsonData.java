@@ -7,6 +7,7 @@ import java.util.Stack;
 import org.apache.commons.lang3.StringUtils;
 
 import com.data.interfaces.KVClass;
+import com.trie.Trie;
 
 /*
  * Class that holds a key and the tuples that this key holds.
