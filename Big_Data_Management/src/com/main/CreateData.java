@@ -50,14 +50,14 @@ public class CreateData {
 		for (int i = 0; i < lines; i++) {
 			JsonData father = generateRandomSimpleData("key" + i);
 			insertNestedTuple(father);
-//			JsonData temp = JsonData.fromString(father.toString());
-//			if(! temp.toString().equals(father.toString())) {
-//				System.out.println("Mismatch between 2 generated JsonData.");
-//				System.out.println("Original data: " + father);
-//				System.out.println("Generated data: " + temp);
-//				System.out.println("----------------------------------------");
-//			}
-			System.out.print(father.toString() + System.lineSeparator());
+			JsonData temp = JsonData.fromString(father.toString());
+			if(! temp.toString().equals(father.toString())) {
+				System.out.println("Mismatch between 2 generated JsonData.");
+				System.out.println("Original data: " + father);
+				System.out.println("Generated data: " + temp);
+				System.out.println("----------------------------------------");
+			}
+//			System.out.print(father.toString() + System.lineSeparator());
 		}
 	}
 	
@@ -67,7 +67,7 @@ public class CreateData {
 			String key = generateString();
 			currentData = generateRandomSimpleData(key);
 			if(previousData != null) {
-				currentData.getKeyValue().put(key, previousData);
+				currentData.getKeyValue().insert(previousData);
 			}
 			previousData = currentData;
 			if(random.nextInt() % 2 == 0) {
@@ -76,7 +76,7 @@ public class CreateData {
 		}
 		
 		if(currentData != null) {
-			head.getKeyValue().put(currentData.getKey(), currentData);
+			head.getKeyValue().insert(currentData);
 		}
 	}
 	

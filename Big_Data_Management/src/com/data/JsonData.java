@@ -1,26 +1,26 @@
 package com.data;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.lang3.StringUtils;
+
+import com.data.interfaces.KVClass;
 
 /*
  * Class that holds a key and the tuples that this key holds.
  * In case some of the key's children are complex types, we add them on the KeyValue map as separate JsonData attributes
  */
-public class JsonData {
+public class JsonData implements KVClass {
 	private String key;
 	private List<Tuple> tuples;
-	private Map<String, JsonData> keyValue;
+	private Trie<JsonData> keyValue;
 
 	public JsonData(String key) {
 		this.key = key;
 		tuples = new ArrayList<Tuple>();
-		keyValue = new HashMap<String, JsonData>();
+		keyValue = new Trie<JsonData>();
 	}
 	
 	public String getChildKey(String... keys) {
@@ -41,7 +41,8 @@ public class JsonData {
 	}
 	
 	private JsonData getChild(String key) {
-		return keyValue.get(key);
+		JsonData temp = keyValue.get(key);
+		return temp == null ? null : temp;
 	}
 	
 	private String getFromTupleList(String key) {
@@ -63,7 +64,7 @@ public class JsonData {
 				string += " ; ";
 			}
 		}
-		for (String childKey : keyValue.keySet()) {
+		for (String childKey : keyValue.getKeys()) {
 			JsonData childData =  keyValue.get(childKey);
 			string += childData.toString() + " ; ";
 			string = string.substring(0, string.length() - 2) + " "; 
@@ -104,10 +105,10 @@ public class JsonData {
 				// New JsonData with one tuple inside it and add it to the father ( either the head of the stack or the parent )
 				JsonData json = createSimpleJsonData(possibleTuple);
 				if(!active.isEmpty()) {
-					active.peek().getKeyValue().put(json.getKey(), json);
+					active.peek().getKeyValue().insert(json);
 					popFromStackAccordingToTheNumberOfClosingTags(parent, active, StringUtils.substringBeforeLast(possibleTuple, "}"), json);
 				} else {
-					parent.getKeyValue().put(json.getKey(), json);
+					parent.getKeyValue().insert(json);
 				}
 			} else if(possibleTuple.contains("{")) {
 				// Contains only an opening tag -> Create new JsonData and add it to the stack
@@ -161,17 +162,17 @@ public class JsonData {
 		if(!active.isEmpty()) {
 			for (int i = 0; i < matches; i++) {
 				if(dato != null) {
-					active.peek().getKeyValue().put(dato.getKey(), dato);
+					active.peek().getKeyValue().insert(dato);
 				}
 				dato = active.pop();
 			}
 			if(dato != null && active.isEmpty()) {
-				parent.getKeyValue().put(dato.getKey(), dato);
+				parent.getKeyValue().insert(dato);
 			} else if(dato != null && !active.isEmpty()) {
-				active.peek().getKeyValue().put(dato.getKey(), dato);
+				active.peek().getKeyValue().insert(dato);
 			}
 		} else if(matches <= 1) {
-			parent.getKeyValue().put(json.getKey(), json);
+			parent.getKeyValue().insert(json);
 		} else {
 			throw new RuntimeException("Found " + matches + " matches but active is empty.");
 		}
@@ -181,13 +182,13 @@ public class JsonData {
 		JsonData dato = null;
 		while(!active.isEmpty()) {
 			if(dato != null) {
-				active.peek().getKeyValue().put(dato.getKey(), dato);
+				active.peek().getKeyValue().insert(dato);
 			}
 			dato = active.pop();
 		}
 
 		if(dato != null) {
-			parent.getKeyValue().put(dato.getKey(), dato);
+			parent.getKeyValue().insert(dato);
 		}
 	}
 
@@ -225,11 +226,11 @@ public class JsonData {
 		this.tuples = tuples;
 	}
 
-	public Map<String, JsonData> getKeyValue() {
+	public Trie<JsonData> getKeyValue() {
 		return keyValue;
 	}
 
-	public void setKeyValue(Map<String, JsonData> keyValue) {
+	public void setKeyValue(Trie<JsonData> keyValue) {
 		this.keyValue = keyValue;
 	}
 

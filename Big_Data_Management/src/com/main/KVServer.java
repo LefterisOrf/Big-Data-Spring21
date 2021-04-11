@@ -12,7 +12,7 @@ import java.net.Socket;
 import org.apache.commons.lang3.StringUtils;
 
 import com.data.JsonData;
-import com.trie.Trie;
+import com.data.Trie;
 
 /**
  * 
@@ -24,7 +24,7 @@ import com.trie.Trie;
 public class KVServer {
 	private static String server;
 	private static Integer port;
-	private static Trie trie = new Trie();
+	private static Trie<JsonData> trie = new Trie<>();
 	
 	public static void main(String[] args) throws IOException {
 		readArguments(args);
@@ -42,40 +42,15 @@ public class KVServer {
 			}
 			
 			if(StringUtils.contains(line, "GET")) {
-				// get query
-				String key = StringUtils.substringAfter(line, " ");
-				JsonData data = trie.get(key);
-				if(data == null) {
-					writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
-				} else {
-					writer.append(data.toString()  + System.lineSeparator()).flush();
-				}
+				get(writer, line);
 			} else if(StringUtils.contains(line, "QUERY")) {
-				// query query
-				String key = StringUtils.substringAfter(line, " ");
-				String data = trie.query(key);
-				if(data == null) {
-					writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
-				} else {
-					writer.append(data  + System.lineSeparator()).flush();
-				}
+				query(writer, line);
 			} else if(StringUtils.contains(line, "PUT")) {
-				String jsonData = StringUtils.substringAfter(line, " ");
-				JsonData data = JsonData.fromString(jsonData);
-				if(data == null) {
-					writer.append("ERROR - Invalid put operation." + System.lineSeparator()).flush();
-					continue;
-				}
-				trie.insertData(data);
-				writer.append("OK" + System.lineSeparator()).flush();
+				put(writer, line);
 			} else if(StringUtils.contains(line, "DELETE")) {
-				if(trie.delete(StringUtils.substringAfter(line, " "))) {
-					writer.append("OK" + System.lineSeparator()).flush();
-				} else {
-					writer.append("ERROR - KEY NOT FOUND" + System.lineSeparator()).flush();
-				}
+				delete(writer, line);
 			} else if(StringUtils.contains(line, "PING")) {
-				continue;
+				continue; // Ping should be ignored.
 			} else {
 				writer.append("Invalid query." + System.lineSeparator()).flush();
 			}
@@ -85,6 +60,49 @@ public class KVServer {
 		sock.close();
 		
 		System.out.println("KV Server with id: " + Thread.currentThread().getId() + " will exit.");
+	}
+
+	private static void delete(BufferedWriter writer, String line) throws IOException {
+		if(trie.delete(StringUtils.substringAfter(line, " "))) {
+			writer.append("OK" + System.lineSeparator()).flush();
+		} else {
+			writer.append("ERROR - KEY NOT FOUND" + System.lineSeparator()).flush();
+		}
+	}
+
+	private static void put(BufferedWriter writer, String line) throws IOException {
+		String jsonData = StringUtils.substringAfter(line, " ");
+		JsonData data = JsonData.fromString(jsonData);
+		if(data == null) {
+			writer.append("ERROR - Invalid put operation." + System.lineSeparator()).flush();
+			return;
+		}
+		trie.insert(data);
+		writer.append("OK" + System.lineSeparator()).flush();
+	}
+
+	private static void query(BufferedWriter writer, String line) throws IOException {
+		String fullKey = StringUtils.substringAfter(line, " ");
+		String highLevelKey = StringUtils.substringBefore(fullKey, ".");
+		JsonData data = trie.get(highLevelKey);
+		String childKeys = StringUtils.substringAfter(fullKey, ".");
+		String[] keyArr = StringUtils.split(childKeys, ".");
+		String result;
+		if(data != null && ( result = data.getChildKey(keyArr)) != null) {
+			writer.append(result  + System.lineSeparator()).flush();
+		} else {
+			writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
+		}
+	}
+
+	private static void get(BufferedWriter writer, String line) throws IOException {
+		String key = StringUtils.substringAfter(line, " ");
+		JsonData data = trie.get(key);
+		if(data == null) {
+			writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
+		} else {
+			writer.append(data.toString()  + System.lineSeparator()).flush();
+		}
 	}
 
 	private static void readArguments(String[] args) {

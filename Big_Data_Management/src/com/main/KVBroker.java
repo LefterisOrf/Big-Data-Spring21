@@ -109,8 +109,7 @@ public class KVBroker {
 	}
 	
 	private static String getOrQuery(String command) {
-		List<SocketDetails> kSocks = getKSockets();
-		for (SocketDetails sock : kSocks) {
+		for (SocketDetails sock : sockets) {
 			try {
 				BufferedWriter writer = sock.getWriter();
 				BufferedReader reader = sock.getReader();
