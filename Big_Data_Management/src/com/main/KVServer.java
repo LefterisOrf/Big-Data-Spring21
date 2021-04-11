@@ -50,7 +50,7 @@ public class KVServer {
 			} else if(StringUtils.contains(line, "DELETE")) {
 				delete(writer, line);
 			} else if(StringUtils.contains(line, "PING")) {
-				continue; // Ping should be ignored.
+				writer.append("OK" + System.lineSeparator()).flush();
 			} else {
 				writer.append("Invalid query." + System.lineSeparator()).flush();
 			}

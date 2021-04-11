@@ -68,7 +68,7 @@ public class KVBroker {
 				if(areAllServersUp()) {
 					System.out.println(delete(line));
 				} else {
-					System.out.println("DELETE operation because not all servers are up.");
+					System.out.println("DELETE operation can't proceed because not all servers are up.");
 				}
 			} else if(line.startsWith("EXIT")) {
 				System.out.println("Received exit command, initiating shutdown.");
@@ -212,6 +212,7 @@ public class KVBroker {
 	private static boolean pingSocket(SocketDetails socket) {
 		try {
 			socket.getWriter().append("PING" + System.lineSeparator()).flush();
+			socket.getReader().readLine();
 			return true;
 		} catch (IOException e) {
 			return false;

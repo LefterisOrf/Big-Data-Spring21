@@ -20,6 +20,7 @@ public class SocketDetails {
 		this.hostname = hostname;
 		this.port = port;
 		this.socket = new Socket(InetAddress.getByName(hostname), port);
+		this.socket.setSoTimeout(800);
 		this.writer = new BufferedWriter(new PrintWriter(socket.getOutputStream()));
 		this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 	}
