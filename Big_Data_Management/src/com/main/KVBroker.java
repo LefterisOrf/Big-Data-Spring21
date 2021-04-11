@@ -57,50 +57,55 @@ public class KVBroker {
 	
 	private static void userCommands() {
 		Scanner scanner = new Scanner(System.in);
+		System.out.println("Enter a GET, QUERY or DELETE command:");
 		while(scanner.hasNextLine()) {
 			String line = scanner.nextLine();
 			if(line.startsWith("GET")) {
-				// traverse all servers and return the data of the first one that answers smthing other than ERROR
 				System.out.println(getOrQuery(line));
 			} else if(line.startsWith("QUERY")) {
-				// traverse all servers and return the data of the first one that answers smthing other than ERROR
 				System.out.println(getOrQuery(line));
 			} else if(line.startsWith("DELETE")) {
-				// check if all servers are UP, if not print a message that the DELETE operation cannot be executed.
 				if(areAllServersUp()) {
 					System.out.println(delete(line));
 				} else {
 					System.out.println("DELETE operation because not all servers are up.");
 				}
-			} else if(line.startsWith("PUT")) {
-				// might not be needed 
 			} else if(line.startsWith("EXIT")) {
 				System.out.println("Received exit command, initiating shutdown.");
 				break;
 			}
-			
+			System.out.println("Enter a GET, QUERY or DELETE command:");
 		}
 		scanner.close();
 	}
 	
 	private static void insertData() {
+		Integer successful = 0;
 		for(String dato : data) {
 			List<SocketDetails> kSocks = getKSockets();
+			Boolean success = false;
 			for (SocketDetails sock : kSocks) {
 				try {
 					BufferedWriter writer = sock.getWriter();
 					BufferedReader reader = sock.getReader();
 					writer.append("PUT " + dato + System.lineSeparator()).flush();
 					String response = reader.readLine();
-					System.err.println("Response: " + response);
 					if(StringUtils.containsIgnoreCase(response, "ERROR")) {
 						System.out.println("ERROR - Could not write data: [ " + dato + " ] to server running on port: " + sock.getPort());
+						success = false;
+						continue;
 					}
+					success = true;
 				} catch (IOException e) {
 					System.out.println("Could not write to socket: " + sock.getPort() + " IOException");
+					success = false;
 				}
 			}
+			if (success) {
+				successful++;
+			}
 		}
+		System.out.println("Inserted " + successful + " KV pairs successfully.");
 	}
 	
 	private static String getOrQuery(String command) {
