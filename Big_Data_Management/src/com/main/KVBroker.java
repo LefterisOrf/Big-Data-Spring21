@@ -126,17 +126,25 @@ public class KVBroker {
 	}
 	
 	private static String delete(String command) {
+		boolean found = false;
 		for (SocketDetails sock : sockets) {
 			try {
 				BufferedWriter writer = sock.getWriter();
 				BufferedReader reader = sock.getReader();
 				writer.append(command + System.lineSeparator()).flush();
-				reader.readLine();
+				String response = reader.readLine();
+				if(response != null &&  !StringUtils.contains(response, "ERROR")) {
+					found = true;
+				}
 			} catch (IOException e) {
 				System.out.println("Could not write to socket: " + sock.getPort() + " IOException");
 			}
 		}
-		return "Finished deletion of " + StringUtils.substringAfter(command, " ");
+		if(found) {
+			return "Finished deletion of " + StringUtils.substringAfter(command, " ");
+		} else {
+			return "NOT FOUND";
+		}
 	}
 	
 	/**
