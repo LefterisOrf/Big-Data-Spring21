@@ -111,7 +111,6 @@ public class KVServer {
 		}
 		for (int index = 0; index < args.length; index++) {
 			String string = args[index];
-			System.out.println(string);
 			if("-a".equals(string)) {
 				server = args[index + 1];
 			} else if("-p".equals(string)) {
