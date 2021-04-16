@@ -115,7 +115,7 @@ public class KVBroker {
 				BufferedReader reader = sock.getReader();
 				writer.append(command + System.lineSeparator()).flush();
 				String response = reader.readLine();
-				if (! StringUtils.containsIgnoreCase(response, "ERROR")) {
+				if (response != null && !StringUtils.containsIgnoreCase(response, "ERROR")) {
 					return response;
 				}
 			} catch (IOException e) {
@@ -131,15 +131,12 @@ public class KVBroker {
 				BufferedWriter writer = sock.getWriter();
 				BufferedReader reader = sock.getReader();
 				writer.append(command + System.lineSeparator()).flush();
-				String response = reader.readLine();
-				if (! StringUtils.containsIgnoreCase(response, "ERROR")) {
-					return response;
-				}
+				reader.readLine();
 			} catch (IOException e) {
 				System.out.println("Could not write to socket: " + sock.getPort() + " IOException");
 			}
 		}
-		return "NOT FOUND";
+		return "Finished deletion of " + StringUtils.substringAfter(command, " ");
 	}
 	
 	/**
@@ -169,6 +166,9 @@ public class KVBroker {
 			}
 		}
 		scanner.close();
+		if(replicationFactor > sockets.size()) {
+			throw new RuntimeException("Replication factor is bigger than the available servers.");
+		}
 	}
 	
 	private static void readData() throws FileNotFoundException {
@@ -216,8 +216,10 @@ public class KVBroker {
 	private static boolean pingSocket(SocketDetails socket) {
 		try {
 			socket.getWriter().append("PING" + System.lineSeparator()).flush();
-			socket.getReader().readLine();
-			return true;
+			if(socket.getReader().readLine() != null) {
+				return true;
+			}
+			return false;
 		} catch (IOException e) {
 			return false;
 		}
