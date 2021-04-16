@@ -151,7 +151,7 @@ public class KVBroker {
 		return sockets.subList(0, replicationFactor);
 	}
 	
-	private static void establishConnections() throws UnknownHostException, IOException {
+	private static void establishConnections() throws FileNotFoundException {
 		File file = new File(serverFilename);
 		if(! file.exists() || !file.canRead()) {
 			throw new RuntimeException("File not found. File:" + file.getAbsolutePath());
@@ -162,7 +162,11 @@ public class KVBroker {
 			String host = StringUtils.substringBefore(line, " ");
 			Integer port = Integer.parseInt(StringUtils.substringAfter(line, " "));
 			System.out.println("Socket: " + host + " " + port);
-			sockets.add(new SocketDetails(host, port));
+			try {
+				sockets.add(new SocketDetails(host, port));
+			} catch (IOException e) {
+				System.out.println("Could not connect to :" + host + ":" + port);
+			}
 		}
 		scanner.close();
 	}
