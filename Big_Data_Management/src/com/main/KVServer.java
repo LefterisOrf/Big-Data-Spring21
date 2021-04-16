@@ -86,9 +86,16 @@ public class KVServer {
 		String highLevelKey = StringUtils.substringBefore(fullKey, ".");
 		JsonData data = trie.get(highLevelKey);
 		String childKeys = StringUtils.substringAfter(fullKey, ".");
+		if(childKeys.isEmpty() && data != null) {
+			writer.append(data.toString()  + System.lineSeparator()).flush();
+		} else if(childKeys.isEmpty() && data == null) {
+			writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
+		}
+		
+		
 		String[] keyArr = StringUtils.split(childKeys, ".");
 		String result;
-		if(data != null && ( result = data.getChildKey(keyArr)) != null) {
+		if(data != null  && ( result = data.getChildKey(keyArr)) != null) {
 			writer.append(result  + System.lineSeparator()).flush();
 		} else {
 			writer.append("ERROR - Key was not found." + System.lineSeparator()).flush();
