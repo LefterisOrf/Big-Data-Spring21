@@ -34,7 +34,11 @@ public class JsonData implements KVClass {
 			child = father.getChild(keys[i]);
 			if(child == null) {
 				// search on tuples list.
-				return father.getFromTupleList(keys[i]);
+				if(i == keys.length - 1) {
+					return father.getFromTupleList(keys[i]);					
+				} else {
+					return null;
+				}
 			}
 			father = child;
 		}
